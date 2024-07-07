@@ -1,9 +1,3 @@
-"""
-WHITE = 1
-BLACK = -1 
-EMPTY = 0 
-"""
-
 # [y,x][棋子/陣營]
 checkerboard = [[[0 for _ in range(2)] for _ in range(9)] for _ in range(9)]
 
@@ -54,7 +48,7 @@ def initialization():
 
 
 def refresh_display():
-    print("\033[H\033[J", end="")  # 清除之前的画面
+    print("\033[H\033[J", end="")  # 清除之前的畫面
 
     def get_current_player():
         if current_player == -1: return "綠"
@@ -107,14 +101,47 @@ def move(x1, y1, x2, y2):
     
     else:   # 單獨棋子種類規則
         if checkerboard[y1][x1][0] == "P":  # 兵
-            if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
-                if (x1+1 == x2 or x1-1 == x2) and abs(y1-y2) == 1:
-                    pass
-                else:
-                    return "違反規則，請重試"
 
-            elif x1 == x2 and abs(y1-y2) == 1:
-                pass
+            if current_player == 1: # 紅方
+                if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
+                    if (x1+1 == x2 or x1-1 == x2) and y2-y1 == 1:
+                        pass
+                    else:
+                        return "違反規則，請重試"
+                    
+                elif y1 == 1:  # 可前進兩格
+                    if x1 == x2 and y2-y1 <= 2 and y2-y1 > 0:
+                        pass
+                    else:
+                        return "違反規則，請重試"
+                else:
+                    if x1 == x2 and y2-y1 == 1:
+                        pass
+                    else:
+                        return "違反規則，請重試"
+
+                
+            elif current_player == -1: # 綠方
+                if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
+                    if (x1+1 == x2 or x1-1 == x2) and y1-y2 == 1:
+                        pass
+                    else:
+                        return "違反規則，請重試"
+                    
+                elif y1 == 6:  # 可前進兩格
+                    if x1 == x2 and y1-y2 <= 2 and y1-y2 > 0:
+                        pass
+
+                    else:
+                        return "違反規則，請重試"
+                else:
+                    if x1 == x2 and y1-y2 == 1:
+                        pass
+                    else:
+                        return "違反規則，請重試"
+                
+                    
+
             else:
                 return "違反規則，請重試"
 
@@ -142,7 +169,7 @@ def move(x1, y1, x2, y2):
             if abs(x1 - x2) > 1 or abs(y1 - y2) > 1:
                 return "違反規則，請重試"
 
-
+    print(y1-y2,y2-y1)
     # 移動棋子
     checkerboard[y2][x2][0] = checkerboard[y1][x1][0]
     checkerboard[y2][x2][1] = checkerboard[y1][x1][1]
