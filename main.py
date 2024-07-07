@@ -55,7 +55,12 @@ def initialization():
 
 def refresh_display():
     print("\033[H\033[J", end="")  # 清除之前的画面
-    print(f"")
+
+    def get_current_player():
+        if current_player == -1: return "綠"
+        else: return "紅"
+
+    print(f"Chess, Current Player：{get_current_player()}\n")
     for row in range(9):
         for column in range(9):
             piece = checkerboard[row][column][0]
@@ -102,11 +107,21 @@ def move(x1, y1, x2, y2):
     
     else:   # 單獨棋子種類規則
         if checkerboard[y1][x1][0] == "P":  # 兵
-            if x1 != x2:
+            if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
+                if (x1+1 == x2 or x1-1 == x2) and abs(y1-y2) == 1:
+                    pass
+                else:
+                    return "違反規則，請重試"
+
+            elif x1 == x2 and abs(y1-y2) == 1:
+                pass
+            else:
                 return "違反規則，請重試"
 
         elif checkerboard[y1][x1][0] == "R":  # 城堡
-            if x1 != x2 and y1 != y2:
+            if x1 == x2 or y1 == y2:
+                pass
+            else: 
                 return "違反規則，請重試"
 
         elif checkerboard[y1][x1][0] == "N":  # 騎士
@@ -149,11 +164,13 @@ while True:
     moveto = input("MoveTo > ")
     if len(select + moveto) == 4:
         return_val = move(select[0],select[1],moveto[0],moveto[1])
-        if  return_val == 0: # 若回傳為0，代表指令錯誤
+        if  return_val == 0: # 若回傳為0，代表成功
+            refresh_display()
+        else:
             refresh_display()
             print(return_val)
         
     else:
-        print("輸入錯誤，請重試")
         refresh_display()
+        print("輸入錯誤，請重試")
     
