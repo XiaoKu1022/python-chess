@@ -1,8 +1,8 @@
 # [y,x][棋子/陣營]
 checkerboard = [[[0 for _ in range(2)] for _ in range(9)] for _ in range(9)]
 
-x = " ABCDEFGH"
-y = " 12345678"
+x_axis = " ABCDEFGH"
+y_axis = " 12345678"
 
 chess = (["R", "N", "B", "Q", "K", "B", "N", "R"], "P")
 order = {
@@ -25,11 +25,11 @@ def initialization():
     for row in range(9):
         for column in range(9):
             if column == 0:  # y 坐標軸
-                checkerboard[row][column][0] = y[8 - row]
+                checkerboard[row][column][0] = y_axis[8 - row]
                 checkerboard[row][column][1] = 0  # 座標無陣營
 
             elif row == 8:  # x 坐標軸
-                checkerboard[row][column][0] = x[column]
+                checkerboard[row][column][0] = x_axis[column]
                 checkerboard[row][column][1] = 0  # 座標無陣營
 
             elif (row == 0 or row == 7) and column > 0:
@@ -99,75 +99,82 @@ def move(x1, y1, x2, y2):
     elif checkerboard[y2][x2][1] == current_player: # 友軍碰撞偵測
         return "不能吃己方的棋，請重試"
     
-    else:   # 單獨棋子種類規則
-        if checkerboard[y1][x1][0] == "P":  # 兵
+    
+    # 單獨棋子種類規則
+    if checkerboard[y1][x1][0] == "P":  # 兵
 
-            if current_player == 1: # 紅方
-                if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
-                    if (x1+1 == x2 or x1-1 == x2) and y2-y1 == 1:
-                        pass
-                    else:
-                        return "違反規則，請重試"
-                    
-                elif y1 == 1:  # 可前進兩格
-                    if x1 == x2 and y2-y1 <= 2 and y2-y1 > 0:
-                        pass
-                    else:
-                        return "違反規則，請重試"
+        if current_player == 1: # 紅方
+            if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
+                if (x1+1 == x2 or x1-1 == x2) and y2-y1 == 1:
+                    pass
                 else:
-                    if x1 == x2 and y2-y1 == 1:
-                        pass
-                    else:
-                        return "違反規則，請重試"
-
+                    return "違反規則，請重試"
                 
-            elif current_player == -1: # 綠方
-                if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
-                    if (x1+1 == x2 or x1-1 == x2) and y1-y2 == 1:
-                        pass
-                    else:
-                        return "違反規則，請重試"
-                    
-                elif y1 == 6:  # 可前進兩格
-                    if x1 == x2 and y1-y2 <= 2 and y1-y2 > 0:
-                        pass
-
-                    else:
-                        return "違反規則，請重試"
+            elif y1 == 1:  # 可前進兩格
+                if x1 == x2 and y2-y1 <= 2 and y2-y1 > 0:
+                    pass
                 else:
-                    if x1 == x2 and y1-y2 == 1:
-                        pass
-                    else:
-                        return "違反規則，請重試"
-                
-                    
-
+                    return "違反規則，請重試"
             else:
-                return "違反規則，請重試"
+                if x1 == x2 and y2-y1 == 1:
+                    pass
+                else:
+                    return "違反規則，請重試"
 
-        elif checkerboard[y1][x1][0] == "R":  # 城堡
-            if x1 == x2 or y1 == y2:
-                pass
-            else: 
-                return "違反規則，請重試"
+            
+        elif current_player == -1: # 綠方
+            if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
+                if (x1+1 == x2 or x1-1 == x2) and y1-y2 == 1:
+                    pass
+                else:
+                    return "違反規則，請重試"
+                
+            elif y1 == 6:  # 可前進兩格
+                if x1 == x2 and y1-y2 <= 2 and y1-y2 > 0:
+                    pass
 
-        elif checkerboard[y1][x1][0] == "N":  # 騎士
-            dx = abs(x1 - x2)
-            dy = abs(y1 - y2)
-            if not ((dx == 1 and dy == 2) or (dx == 2 and dy == 1)):
-                return "違反規則，請重試"
+                else:
+                    return "違反規則，請重試"
+            else:
+                if x1 == x2 and y1-y2 == 1:
+                    pass
+                else:
+                    return "違反規則，請重試"
+            
+        else:
+            return "違反規則，請重試"
 
-        elif checkerboard[y1][x1][0] == "B":  # 主教
-            if abs(x1 - x2) != abs(y1 - y2):
-                return "違反規則，請重試"
+    elif checkerboard[y1][x1][0] == "R":  # 城堡
+        if x1 == x2 or y1 == y2:
+            pass
+        else: 
+            return "違反規則，請重試"
 
-        elif checkerboard[y1][x1][0] == "Q":  # 后
-            if (abs(x1 - x2) != abs(y1 - y2)) and (x1 != x2) and (y1 != y2):
-                return "違反規則，請重試"
+    elif checkerboard[y1][x1][0] == "N":  # 騎士
+        dx = abs(x1 - x2)
+        dy = abs(y1 - y2)
+        if (dx == 1 and dy == 2) or (dx == 2 and dy == 1):
+            pass
+        else:
+            return "違反規則，請重試"
 
-        elif checkerboard[y1][x1][0] == "K":  # 王
-            if abs(x1 - x2) > 1 or abs(y1 - y2) > 1:
-                return "違反規則，請重試"
+    elif checkerboard[y1][x1][0] == "B":  # 主教
+        if abs(x1 - x2) == abs(y1 - y2):
+            pass
+        else:
+            return "違反規則，請重試"
+
+    elif checkerboard[y1][x1][0] == "Q":  # 后
+        if (abs(x1 - x2) == abs(y1 - y2)) or (x1 == x2) or (y1 == y2):
+            pass
+        else:
+            return "違反規則，請重試"
+
+    elif checkerboard[y1][x1][0] == "K":  # 王
+        if abs(x1 - x2) == 1 or abs(y1 - y2) == 1:
+            pass
+        else:
+            return "違反規則，請重試"
 
     print(y1-y2,y2-y1)
     # 移動棋子
