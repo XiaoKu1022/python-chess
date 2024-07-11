@@ -2,7 +2,17 @@
 checkerboard = [[[0 for _ in range(2)] for _ in range(9)] for _ in range(9)]
 # 9x9x2 陣列，第一層為棋盤，第二層紀錄陣營
 
-current_player = -1   # 初回合的玩家
+RED = 1
+GREEN = -1
+VOID = 0
+
+def ENEMY(x):
+    if x==RED: return GREEN
+    elif x==GREEN: return RED
+    return VOID
+
+
+current_player = GREEN   # 初回合的玩家
 
 
 
@@ -15,32 +25,32 @@ def initialization(): # 遊戲初始化
         for column in range(9):
             if row == 8:  # x 坐標軸
                 checkerboard[row][column][0] = x_axis[column]
-                checkerboard[row][column][1] = 0  # 座標無陣營
+                checkerboard[row][column][1] = VOID  # 座標無陣營
             
             elif column == 0:  # y 坐標軸
                 checkerboard[row][column][0] = 8 - row
-                checkerboard[row][column][1] = 0  # 座標無陣營
+                checkerboard[row][column][1] = VOID  # 座標無陣營
             
             elif column > 0:
                 if row == 0:
                     checkerboard[row][column][0] = chess[0][column - 1]
-                    checkerboard[row][column][1] = 1
+                    checkerboard[row][column][1] = RED
 
                 elif row == 1:
                     checkerboard[row][column][0] = chess[1]
-                    checkerboard[row][column][1] = 1
+                    checkerboard[row][column][1] = RED
 
                 elif row == 6:
                     checkerboard[row][column][0] = chess[1]
-                    checkerboard[row][column][1] = -1
+                    checkerboard[row][column][1] = GREEN
 
                 elif row == 7:
                     checkerboard[row][column][0] = chess[0][column - 1]
-                    checkerboard[row][column][1] = -1
+                    checkerboard[row][column][1] = GREEN
 
                 else:
                     checkerboard[row][column][0] = " "
-                    checkerboard[row][column][1] = 0
+                    checkerboard[row][column][1] = VOID
     return 0
         
 
@@ -48,7 +58,7 @@ def initialization(): # 遊戲初始化
 
 def refresh_display():
     def get_current_player():
-        if current_player == -1: 
+        if current_player == GREEN: 
             return "G"
         else: 
             return "R"
@@ -59,10 +69,10 @@ def refresh_display():
         for column in range(9):
             piece = checkerboard[row][column][0]
             camp = checkerboard[row][column][1]
-            if camp == 1:   # 陣營為紅方
+            if camp == RED:   # 陣營為紅方
                 print(f"\033[41m {piece}", end=" \033[0m")  # 红色背景
 
-            elif camp == -1:# 陣營為綠方
+            elif camp == GREEN:# 陣營為綠方
                 print(f"\033[42m {piece}", end=" \033[0m")  # 綠色背景
 
             else:           # 無陣營 (空)
@@ -71,7 +81,7 @@ def refresh_display():
                 elif column > 0 and row < 8:
                     print(f"\033[47m {piece}", end=" \033[0m") # 白色背景
                 else:
-                    print(f" {piece}", end=" ") # 白色背景
+                    print(f" {piece}", end=" ")
         print()
     return 0
 
@@ -81,13 +91,13 @@ def refresh_display():
 def rules(x1,y1,x2,y2):
     global current_player
 
-    def cover():
-        if x1-x2 > 0:   dirx = -1
-        elif x1-x2 < 0: dirx = 1
+    def cover():   # general_rule_for_PRKQ
+        if x1 > x2:     dirx = -1
+        elif x1 < x2:   dirx = 1
         else:           dirx = 0
 
-        if y1-y2 > 0:   diry = -1
-        elif y1-y2 < 0: diry = 1
+        if y1 > y2:     diry = -1
+        elif y1 < y2:   diry = 1
         else:           diry = 0
 
         movepoint_x = x1
@@ -95,9 +105,11 @@ def rules(x1,y1,x2,y2):
         while movepoint_x != x2 or movepoint_y != y2:
             movepoint_x += dirx
             movepoint_y += diry
-            if checkerboard[movepoint_y][movepoint_x][1] == 0:
+            if checkerboard[movepoint_y][movepoint_x][1] == VOID:
                 pass
             else:
+                if movepoint_x == x2 and movepoint_y == y2:
+                    pass
                 return "違反規則"
         return 0
         
@@ -130,41 +142,43 @@ def rules(x1,y1,x2,y2):
     else:
         # 棋子種類規則
         if checkerboard[y1][x1][0] == "P":  # 兵
-            if cover() != 0:
-                return "E"
             
-            if current_player == 1: # 紅方
+            if current_player == RED: # 紅方
                 dy = y2-y1
             else:                   # 綠方
                 dy = y1-y2
 
-            if checkerboard[y2][x2][1] == -current_player: # 要移動的位置有敵軍
-                if (x1+1 == x2 or x1-1 == x2) and dy == 1:
+            if checkerboard[y2][x2][1] == ENEMY(current_player): # 要移動的位置有敵軍
+                if abs(x1-x2)==1 and dy == 1:
                     pass
                 else:
-                    return "違反規則，請重試"
+                    return "違反吃過路兵規則，請重試"
                 
-            elif y1 == 1 or y1 == 6:  # 可前進兩格
+            elif (current_player == RED and y1 == 1) or (current_player == GREEN and y1 == 6):  # first move可前進一或兩格
                 if x1 == x2 and dy <= 2 and dy > 0:
+                    if cover() != 0:
+                        return "Err -1 路徑有棋子"
                     pass
                 else:
-                    return "違反規則，請重試"
+                    return "違反兵規則，請重試"
                 
             else:
                 if x1 == x2 and dy == 1:
                     pass
                 else:
-                    return "違反規則，請重試"
+                    return "違反兵規則，請重試"
 
 
         elif checkerboard[y1][x1][0] == "R":  # 城堡
-            if cover() != 0:
-                return "E"
-            
             if x1 == x2 or y1 == y2:
                 pass
             else: 
-                return "違反規則，請重試"
+                return "違反城堡規則，請重試"
+            
+            if cover() != 0:
+                return "Err 0 路徑有棋子"
+            
+
 
 
         elif checkerboard[y1][x1][0] == "N":  # 騎士
@@ -173,34 +187,34 @@ def rules(x1,y1,x2,y2):
             if (dx == 1 and dy == 2) or (dx == 2 and dy == 1):
                 pass
             else:
-                return "違反規則，請重試"
+                return "違反騎士規則，請重試"
 
 
         elif checkerboard[y1][x1][0] == "B":  # 主教
-            if cover() != 0:
-                return "E"
-            
             if abs(x1 - x2) == abs(y1 - y2):
                 pass
             else:
-                return "違反規則，請重試"
+                return "違反主教規則，請重試"
+                
+            if cover() != 0:
+                return "Err 1 路徑有棋子"
 
 
         elif checkerboard[y1][x1][0] == "Q":  # 后
-            if cover() != 0:
-                return "E"
-            
             if (abs(x1 - x2) == abs(y1 - y2)) or (x1 == x2) or (y1 == y2):
                 pass
             else:
-                return "違反規則，請重試"
+                return "違反后規則，請重試"
+
+            if cover() != 0:
+                return "Err 2 路徑有棋子"
 
 
         elif checkerboard[y1][x1][0] == "K":  # 王
             if abs(x1 - x2) == 1 or abs(y1 - y2) == 1:
                 pass
             else:
-                return "違反規則，請重試"
+                return "違反王規則，請重試"
 
 
         # 移動棋子
