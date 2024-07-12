@@ -59,7 +59,8 @@ def refresh_display(error_msg=""):
         else: 
             return "R"
         
-    print("\033[H\033[J", end=f"Chess, Current Player：{get_current_player()} \n\n")  # 清除之前的畫面
+    print("\033[H\033[J", end=" ")  # 清除之前的畫面
+    print(f"Chess, Current Player：{get_current_player()} ")
 
     for row in range(9):
         for column in range(9):
@@ -138,6 +139,9 @@ def pawn_rule(x1, y1, x2, y2, current_player):
     else:  # Green player
         dy = y1 - y2
 
+    if (current_player == RED and y2 == 7) or (current_player == GREEN and y2 == 0):
+        checkerboard[y1][x1][0] = "Q"
+
     if checkerboard[y2][x2][1] == -current_player:  # Capture move
         if abs(x1 - x2) == 1 and dy == 1:
             return 0
@@ -153,10 +157,11 @@ def pawn_rule(x1, y1, x2, y2, current_player):
             return "違反兵規則，請重試"
 
     else:
-        if x1 == x2 and dy == 1:
+        if x1 == x2 and dy > 1: #### TEST
             return 0
         else:
             return "違反兵規則，請重試"
+
 
 
 def rook_rule(x1, y1, x2, y2):
@@ -257,10 +262,30 @@ def rules(x1, y1, x2, y2):
 
 
 initialization()    # 初始化遊戲
+
+checkerboard[1][1][0] = "P"
+checkerboard[1][1][1] = GREEN
 refresh_display()   # 刷新畫面
 
 
+
+
+
+def check():
+    king_coordinate = []
+    for row in range(9):
+        for column in range(9):
+            piece = checkerboard[row][column][0]
+            camp = checkerboard[row][column][1]
+            if piece == "K":
+                king_coordinate.append((row,column,camp))
+
+    
+    return king_coordinate
+
+
 while not(game_over):
+    print(check())
     select = input("Select > ")
     moveto = input("MoveTo > ")
     if len(select + moveto) == 4:
