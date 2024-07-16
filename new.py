@@ -3,6 +3,7 @@ checkerboard = [[[0 for _ in range(2)] for _ in range(9)] for _ in range(9)]
 # 9x9x2 陣列，第一層為棋盤，第二層紀錄陣營
 
 game_over = False
+history = []
 
 RED = 1
 GREEN = -1
@@ -55,12 +56,12 @@ def initialization(): # 遊戲初始化
 def refresh_display(error_msg=""):
     def get_current_player():
         if current_player == GREEN: 
-            return "G"
+            return "GREEN"
         else: 
-            return "R"
+            return "RED"
         
     #print("\033[H\033[J", end=" ")  # 清除之前的畫面
-    print(f"Chess, Current Player：{get_current_player()} ")
+    print(f"Current Player : {get_current_player()} ")
 
     for row in range(9):
         for column in range(9):
@@ -83,6 +84,10 @@ def refresh_display(error_msg=""):
         print()
 
     print(error_msg)
+    print(history)
+
+    
+        
     return 0
 
 
@@ -104,19 +109,13 @@ def convert_position(x, y):
 
 def cover(x1, y1, x2, y2):
     """Check if there is any piece between (x1, y1) and (x2, y2)."""
-    if x1 > x2:
-        dirx = -1
-    elif x1 < x2:
-        dirx = 1
-    else:
-        dirx = 0
+    if x1 > x2: dirx = -1
+    elif x1 < x2: dirx = 1
+    else: dirx = 0
 
-    if y1 > y2:
-        diry = -1
-    elif y1 < y2:
-        diry = 1
-    else:
-        diry = 0
+    if y1 > y2: diry = -1
+    elif y1 < y2: diry = 1
+    else: diry = 0
 
     movepoint_x = x1
     movepoint_y = y1
@@ -134,16 +133,14 @@ def cover(x1, y1, x2, y2):
 
 def pawn_rule(x1, y1, x2, y2, current_player):
     """Check the movement rules for pawns."""
-    #print(current_player,y2)
     if current_player == RED:  # Red player
         dy = y2 - y1
     else:  # Green player
         dy = y1 - y2
 
-
     if checkerboard[y2][x2][1] == -current_player:  # Capture move
         if abs(x1 - x2) == 1 and dy == 1:
-            return 0
+            pass
         else:
             return "違反吃過路兵規則，請重試"
 
@@ -157,9 +154,13 @@ def pawn_rule(x1, y1, x2, y2, current_player):
 
     else:
         if x1 == x2 and dy == 1:
-            return 0
+            pass
         else:
             return "違反兵規則，請重試"
+
+    if (current_player == RED and y2 == 7) or (current_player == GREEN and y2 == 0):
+        checkerboard[y1][x1][0] = input("Promoted to > ")
+    return 0
 
 
 
@@ -249,7 +250,14 @@ def rules(x1, y1, x2, y2):
         return result
 
     # 移動棋子
-    checkerboard[y2][x2][0] = piece
+    # move, (player, piece, (x1,y1),  (x2,y2))
+    # kill, ((player, piece, (x1,y1)), (player, piece, (x2,y2)))
+    history.append(f"move, ({current_player}, {piece}, {(x1,y2)}, {(x2,y2)})")
+    if checkerboard[y2][x2][1] == -current_player:
+        history.append(f"kill, (({current_player}, {piece}, {(x1,y1)}), ({-current_player}, {checkerboard[y2][x2][0]}, {(x2,y2)}))")
+
+    
+    checkerboard[y2][x2][0] = checkerboard[y1][x1][0]
     checkerboard[y2][x2][1] = current_player
     checkerboard[y1][x1][0] = " "
     checkerboard[y1][x1][1] = 0
@@ -261,6 +269,10 @@ def rules(x1, y1, x2, y2):
 
 
 initialization()    # 初始化遊戲
+"""
+checkerboard[1][1][0] = "P" 
+checkerboard[1][1][1] = GREEN
+"""
 refresh_display()   # 刷新畫面
 
 
@@ -274,13 +286,72 @@ def check():
             piece = checkerboard[row][column][0]
             camp = checkerboard[row][column][1]
             if piece == "K":
-                king_coordinate.append((row,column,camp))
+                king_coordinate.append((camp,(row,column)))
+                
+    for king in king_coordinate:
+        king_camp = king[0]
+        king_x = king[1][1]
+        king_y = king[1][0]
+
+        
+        # 對角線 (Q or B)
+        dirs = [(1,1),(-1,1),(-1,-1),(1,-1)]
+        for dir in dirs:
+            movepoint_x = king_x
+            movepoint_y = king_y
+            dir_x = dir[0]
+            dir_y = dir[1]
+            while (movepoint_x > 0 and movepoint_x < 9) and (movepoint_y > -1 and movepoint_y < 8):
+                movepoint_camp = checkerboard[movepoint_y][movepoint_x][1]
+                movepoint_piece = checkerboard[movepoint_y][movepoint_x][0]
+                
+                if movepoint_piece == "Q" or movepoint_piece == "B":
+                    if movepoint_camp == -king_camp:
+                        print("Check")
+                        
+                movepoint_x += dir_x
+                movepoint_y += dir_y
+                
+        # 十字 (Q or R)
+        dirs = [(1,0),(-1,0),(0,-1),(0,-1)]
+        for dir in dirs:
+            movepoint_x = king_x # 初始化動點位置為 king
+            movepoint_y = king_y 
+            dir_x = dir[0]
+            dir_y = dir[1]
+            while (movepoint_x > 0 and movepoint_x < 9) and (movepoint_y > -1 and movepoint_y < 8): # 在棋盤範圍內移動
+                movepoint_camp = checkerboard[movepoint_y][movepoint_x][1]  # 取得 動點位置 的兵種
+                movepoint_piece = checkerboard[movepoint_y][movepoint_x][0] # 取得 動點位置 的陣營
+        
+                if movepoint_piece == "Q" or movepoint_piece == "B": # 如果動點位置為 皇后 或 主教
+                    if movepoint_camp == -king_camp: 
+                        print("Check")
+                        
+                movepoint_x += dir_x # 指向下一個位置
+                movepoint_y += dir_y
+                
+        # 日字 (N)
+
+                
+        # 斜 (P)
+
+                    
+    
+    """
+    if (x,ANY) or (y,ANY) == Q or R {
+        return check
+    } else{
+        
+        while 
+    }
+    """
+        
 
     return king_coordinate
 
 
 while not(game_over):
-    #print(check())
+    print(check())
     select = input("Select > ")
     moveto = input("MoveTo > ")
     if len(select + moveto) == 4:
